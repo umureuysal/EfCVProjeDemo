@@ -1,0 +1,226 @@
+- Önce vertiabanını ve tabloları oluşturduk.
+
+- .Net Framework > Empty ile projeyi oluşturduk.Sonra Default adı ile Web Form ekledik.
+
+- web klasörünü projeye ekleyip index içindekileri kopyalayıp Default'a yapıştırdık. script, image ve css'lerin başına web/ ekleyerek temayı entegre ettik.
+
+- Ado.Net Entity Data Model'de DB First'ten ilerleyerek tüm tabloları seçtikten sonra Tables'ı işaretleyerek modeli oluştururuz.
+
+- Örnek Veri girişleri yaparak temayı kişiselleştirdik.
+
+- Veri tabanından Web Form'daki ilgili yere veri çekmek için Repeater ve onun içine ItemTemplate eklenir ve içine şu kod yazılır.
+<%#Eval ("Sütunadı")%>
+Daha sonra F7 ile formun classına gidilir ve;
+(DB Adı)Entities1 db= new (DB Adı)Entities1();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            Repeater1.DataSource = db.(TabloAdı).ToList();
+            Repeater1.DataBind();
+        }
+
+- Liste şeklinde veri çekmek için;
+<ul class="list-unstyled mt-5">
+
+                    <asp:Repeater ID="Repeater4" runat="server">
+                        <ItemTemplate>
+                            <li>
+                                <div class="row">
+                                    <div class="col-2 ic-lft">
+                                        <span class="fa fa-code"></span>
+                                    </div>
+                                    <div class="col-10">
+                                        <h6><%#Eval("Yetenek") %> </h6>
+                                    </div>
+                                </div>
+                            </li>
+                        </ItemTemplate>
+                    </asp:Repeater>
+                </ul> ve class tarafında yukarıdaki kod yazılır.
+
+- İletişim paneli için formun içine runat="server yazdık ve inputlar yerine TextBox'ları şu şekilde ekledik:
+                        <div class="col-sm-6">
+                            <asp:TextBox ID="TextBox1" runat="server" placeholder="Adınız" (Mesaj için TextMode="MultiLine" Height="30" ekledik.)></asp:TextBox>
+                        </div>
+Düğmeleri de şu şekilde ekledik:
+ <asp:Button ID="Button1" runat="server" CssClass="btn btn-info" Text="Gönder" OnClick="Button1_Click" />
+ <asp:Button ID="Button2" runat="server" CssClass="btn btn-warning" Text="Vazgeç" />
+
+- Modeli güncellerken db'den güncelledikten sonra model diagramına gelip sağ tıklayıp Update from DB diyip hiçbir şeyi seçmeden finishe tıklarız.
+
+- Mesajı göndermek için Gönder butonunu çift tıklayıp;
+protected void Button1_Click(object sender, EventArgs e)
+        {
+            İletisim mesaj = new İletisim();
+            mesaj.AdSoyad = TextBox1.Text;
+            mesaj.Mail = TextBox2.Text;
+            mesaj.Konu = TextBox3.Text;
+            mesaj.Mesaj = TextBox3.Text;
+            db.İletisim.Add(mesaj);
+            db.SaveChanges();
+        } yazarız.
+
+- Admin paneli için projeye Web Forms Master Page ekledik ve bootstrapten nav bar ekledik. Daha sonra "Yetenekler" adıyla Web Forms with Master Page'i Admin.Master'ı seçerek ekledik.
+Admin panelinden Navbar'daki Yetenekler'e link verdik: <li><a href="/Yetenekler.aspx">Yetenekler</a></li>
+
+- Yetenekleri listelemek için Content2'nin içerisine;
+<table class="table table-striped" style="margin-left:20px; margin-right:20px;">
+        <tr>
+            <th>ID</th>
+            <th>YETENEK</th>
+        </tr>
+        <asp:Repeater ID="Repeater1" runat="server">
+            <ItemTemplate>
+                <tr>
+                    <td><%#Eval("ID") %></td>
+                    <td><%#Eval("Yetenek") %></td>
+                    <td><a href="/Sil.Aspx?ID=<%#Eval("ID") %>" class="btn btn-danger">Sil</a>
+                        <asp:HyperLink ID="HyperLink1" NavigateUrl='<%#"Guncelle.aspx?ID=" + Eval("ID") %>' CssClass="btn btn-default" runat="server">Güncelle</asp:HyperLink>
+                    </td>
+                </tr>
+            </ItemTemplate>
+        </asp:Repeater>
+
+    </table>
+
+    <a href="YeniYetenek.Aspx" class="btn btn-primary" style="margin-left:20px">Yetenek Ekle</a> yazdık ve sonra F7 ile classa gidip db entity'si ekleyip
+Repeater1.DataSource = db.Yetenekler.ToList();
+            Repeater1.DataBind(); yazdık.
+
+- Yeni yetenek eklemek için YeniYetenek adıyla bir Web Forms oluşturduk ve Content2 içerisine;
+<h4>Yetenek Ekle</h4>
+    <br /> 
+    <asp:Label ID="Label1" runat="server" Text="Yetenek : "></asp:Label>
+    <asp:TextBox ID="TextBox1" runat="server" ></asp:TextBox>
+    <br />
+    <asp:Button ID="Button1" runat="server" Text="Kaydet" CssClass="btn btn-info" OnClick="Button1_Click"/> yazdık ve F7 ile formun classına gittik. class'ın içerisine;
+DBCVEFrameworkEntities1 db = new DBCVEFrameworkEntities1();
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+           Yetenekler yetenek = new Yetenekler();
+            yetenek.Yetenek = TextBox1.Text;
+            db.Yetenekler.Add(yetenek);
+            db.SaveChanges();
+            Response.Redirect("Yetenekler.Aspx");
+        } yazdık.
+
+- Yetenek silmek için Sil adıyla Web Forms oluşturduk ve direkt olarak cs'a gittik ve şöyle yazdık;
+ DBCVEFrameworkEntities1 db = new DBCVEFrameworkEntities1();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+           int id = Convert.ToInt32(Request.QueryString["ID"]);
+            var yetenek = db.Yetenekler.Find(id);
+            db.Yetenekler.Remove(yetenek);
+            db.SaveChanges();
+            Response.Redirect("Yetenekler.Aspx");
+        }
+
+- Yetenek güncellemek için Güncelle adıyla Web Forms oluşturduk ve Content2'ye şöyle yazdık;
+<h3>Yetenek Güncelle</h3>
+    <br /> 
+    <asp:Label ID="Label1" runat="server" Text="Yetenek" Font-Bold="true" ></asp:Label>
+    <asp:TextBox ID="TextBox1" runat="server" CssClass="form-control" ></asp:TextBox>
+    <br /> 
+    <asp:Button ID="Button1" runat="server" Text="Kaydet" CssClass="btn btn-info" OnClick="Button1_Click"/>
+
+- Daha sonra cs'a gidip şöyle yazdık;
+ public partial class Guncelle : System.Web.UI.Page
+    {
+        DBCVEFrameworkEntities1 db = new DBCVEFrameworkEntities1();
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            int id = int.Parse(Request.QueryString["ID"]);
+            if (Page.IsPostBack == false)
+            {
+                Yetenekler yetenek = db.Yetenekler.Find(id);
+                TextBox1.Text = yetenek.Yetenek;
+            }
+        }
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+             int id = int.Parse(Request.QueryString["ID"]);
+            Yetenekler yetenek = db.Yetenekler.Find(id);
+            yetenek.Yetenek = TextBox1.Text;
+            db.SaveChanges();
+            Response.Redirect("Yetenekler.aspx");
+        }
+    }
+- İletişim Sayfası için İletişim adıyla Web Forms oluşturduk ve içine;
+<table class="table table-striped" style="margin-left:20px; margin-right:20px;">
+        <tr>
+            <th>ID</th>
+            <th>GÖNDEREN</th>
+            <th>MAİL ADRESİ</th>
+            <th>KONU</th>
+            <th>MESAJ</th>
+        </tr>
+        <asp:Repeater ID="Repeater1" runat="server">
+            <ItemTemplate>
+                <tr>
+                    <td><%#Eval("ID") %></td>
+                    <td><%#Eval("AdSoyad") %></td>
+                    <td><%#Eval("Mail") %></td>
+                    <td><%#Eval("Konu") %></td>
+                    <td>
+                        <asp:HyperLink ID="HyperLink1" runat="server" CssClass="btn btn-primary" NavigateUrl='<%#"Mesaj.aspx?ID="+Eval("ID") %>'>Göster</asp:HyperLink>
+                    </td>
+                </tr>
+            </ItemTemplate>
+        </asp:Repeater>
+
+    </table> ve cs'a;
+
+DBCVEFrameworkEntities1 db = new DBCVEFrameworkEntities1();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            Repeater1.DataSource= db.İletisim.ToList();
+            Repeater1.DataBind();
+        } yazdık.
+
+- Mesajı görüntüleyebilmek için Mesaj adıyla Web Forms oluşturup;
+<h2>&nbsp; Mesaj Detayları</h2>
+    <br /><br />
+<div>
+   &nbsp;&nbsp;
+   <asp:Label ID="Label1" runat="server" Text="Label" Font-Bold="True">Gönderen: </asp:Label>
+   <asp:Label ID="Label2" runat="server" Text="Label" TextMode="MultiLine"></asp:Label>
+
+</div>
+    <br />
+    <div>
+   &nbsp;&nbsp;
+   <asp:Label ID="Label3" runat="server" Text="Label" Font-Bold="True" >Konu: </asp:Label>
+   <asp:Label ID="Label4" runat="server" Text="Label" TextMode="MultiLine" ></asp:Label>
+
+</div>
+    <br />    
+    <div>
+   &nbsp;&nbsp;
+   <asp:Label ID="Label5" runat="server" Text="Label" Font-Bold="True">Mesaj: </asp:Label>
+   <asp:Label ID="Label6" runat="server" Text="Label" TextMode="MultiLine"></asp:Label>
+
+</div>
+   ve cs içerisine;
+ DBCVEFrameworkEntities1 db = new DBCVEFrameworkEntities1();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            int id = int.Parse(Request.QueryString["ID"]);
+            var mesaj = db.İletisim.Find(id);
+            Label2.Text=mesaj.AdSoyad.ToString();
+            Label4.Text=mesaj.Konu.ToString();
+            Label6.Text=mesaj.Mesaj.ToString();
+        } yazdık.
+
+- İstatistikleri görüntülemek için Istatistik Web Formunu oluşturup indirdiğimiz istatistik temasını içine yapıştırdık. Sonra içine labellar atıp istatistikleri veritabanından şu şekilde çektik.
+ DBCVEFrameworkEntities1 db = new DBCVEFrameworkEntities1();
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            Label1.Text =db.Yetenekler.Count().ToString();
+            Label2.Text =db.İletisim.Count().ToString();
+            Label3.Text = db.Yetenekler.Average(x => x.Derece).ToString();
+            int maxderece = (int)db.Yetenekler.Max(x => x.Derece);
+            Label4.Text = db.Yetenekler.Where(x => x.Derece == maxderece).FirstOrDefault().Yetenek;
+        }
+- Admin login paneli için veritabanında admin tablosu oluşturup id, ad-soyad ve şifre alanlarını tanımladık ve 2 değer ekledik. Sonra modeli güncelledik. 
+
+- Login adıyla bağımsız bir Web Form oluşturduk ve indirdiğimiz Login klasörünü kopyalayıp içine yapıştırdık. Sonra içini düzenledik.
